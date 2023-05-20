@@ -1,0 +1,5 @@
+Grains,pasta,slicedbread,cereal,flour,roti
+RawMeats,beef,chicken,pork,fish,shrimp
+Dairy,milk,yoghurt,cheese,cream,butter
+Vegetables,coriander,radish,onions,potatoes,peas
+Fruits,apples,oranges,grapes,mango

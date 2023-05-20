@@ -1,0 +1,62 @@
+====================================
+Car Loan Loan from Malaysian Bank:
+====================================
+* Flexible and affordable repayment
+* Hassle free with fast processing and approval
+* Convenient loan payments via 400 Malaysian Bank branches nationwide
+* Choice of dealers located nationwide
+* Maximum financing of up to RM1,000,000
+* Minimum financing as low as RM25,000
+* 2.5% interest rate per annual
+
+====================================
+How to Apply:
+====================================
+*Employed Graduates
+
+   -At least a Degree holder
+   -Employed for at least 1 month with a minimum salary of RM2,500
+   -Aged between 20 - 30 years old
+   -For those with less than 6 months of employment, applications can still be considered if parents or siblings serve as guarantor.
+
+*Undergraduates
+
+   -Pursuing a degree in a recognised institution of higher learning
+   -Aged between 18 - 30 years old
+   -Parents or siblings to serve as guarantor
+   -Preferred profession under this scheme
+        +Government Officer
+        +Teacher
+        +Nurse
+        +Professional e.g. Accountant, Engineer, Auditor, Lawyer, Architect, Doctor, etc
+
+====================================
+Repayments:
+====================================
+*Hire Purchase Financing
+*Perform Payment via ATM/CDM Machine
+
+   -ATM
+
+        +Select "Other Transaction"
+        +Select "Payment"
+        +Select "Express Payment"
+        +Select "Loan/Financing"
+        +Select "Vehicle Loan/Hire Purchase"
+        +Enter "Acc.No. or Vehicle no."
+        +Enter "Amount"
+        +Select the "Account" you wish to make payment from
+        +"Confirmation" screen displayed
+        +"Transaction completed"
+
+   -CDM
+
+        +Select "CDM"
+        +Select "Cash Payment"
+        +Select "Malaysian Bank Cash Payment"
+        +Select "Loan/Financing"
+        +Select "Vehicle Loan/Hire Purchase"
+        +Enter "Acc.No.or Vehicle No."
+        +"Insert Cash"
+        +"Confirmation" screen display
+        +"Transaction completed"

@@ -1,0 +1,2 @@
+Ali_Zahid123,Ali_Zahid,thehighscorer@gmail.com,011-37728489,18/12/2002,Male,Education Loan (EL),10000,10,19/04/2021,Approved
+Bread_Jam,Ali_Zahid,thehighscorer@gmail.com,011-12345678,18/12/2002,Male,Education Loan (EL),6000,5,08/05/2021,Approved

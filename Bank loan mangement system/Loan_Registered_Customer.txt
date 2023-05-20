@@ -1,0 +1,2 @@
+Ali_Zahid123,Ali_Zahid,LN1c94414f-3198-4253-ac0c-ae8fbdf5b99c,Education Loan (EL),10000.0,0.01,91.67,Loan Approved,19/05/2021
+Bread_Jam,Ali_Zahid,LN766f6aa6-f785-4208-a2ae-7e3c02b459f7,Education Loan (EL),6000.0,0.01,105.0,Loan Approved,08/06/2021

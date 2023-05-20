@@ -1,0 +1,2354 @@
+PRORGRAM ONLINE FOOD ORDERING SYSTEM
+BEGIN
+
+CALL cus_menu FUNCTION with parameter(user_name, account_password)
+
+
+
+FUNCTION cus_menu with parameter(user_name, account_password)
+BEGIN
+	DECLARE Food_Item_Template_Txt, Food_Items_Txt, Food_Item_Template, User_Details_Template_Txt
+	DECLARE User_Details_Template, User_Details_Txt, user_name, account_password
+	DECLARE Account_Details, Food_Items_Supply_Template_Txt
+	OPEN("User Details Template.txt" in READ MODE) as User_Details_Template_Txt:
+		DEFINE User_Details_Template ARRAY
+		READ User_Details_Template_Txt
+		SEPERATE EACH line of User_Details_Template_Txt into OBJECTS
+		INSERT into User_Details_Template ARRAY
+    CLOSE ("User_Details_Template_Txt")
+	
+	
+    OPEN("User Details" in WRITE AND READ MODE) as User_Details_Txt:
+	
+		WRITE 'NEWLINE'+ User_Details_Template into User_Details_Txt
+		
+	CLOSE User_Details_Txt
+	
+	OPEN ("Food Items Template.txt" in READ MODE) as Food_Item_Template_Txt:
+	
+		READ Food_Item_Template_Txt
+		DEFINE Food_Item_Template ARRAY
+		SEPERATE EACH line of Food_Item_Template_Txt into OBJECTS
+		INSERT into Food_Item_Template ARRAY
+		
+	CLOSE ("Food_Item_Template_Txt")
+	
+	OPEN ("Food Item.txt" IN WRITE AND READ MODE) as Food_Items_Txt:
+	
+		WRITE 'NEWLINE' + Food_Item_Template into Food_Items_Txt
+		WRITE 'NEWLINE' into Food_Items_Txt 
+		
+	CLOSE Food_Items_Txt
+	
+	OPEN("Food Item Supply Template.txt" in READ MODE) as Food_Items_Supply_Template_Txt:
+	
+		READ Food_Items_Supply_Template_Txt
+		DEFINE ARRAY Food_Items_Supply_Template_Txt
+		SEPERATE EACH line of Food_Items_Supply_Template_Txt into OBJECTS
+		INSERT into Food_Items_Supply_Template_Txt ARRAY
+		
+	CLOSE("Food Item Supply Template.txt")
+	
+    OPEN("Food Item Supply.txt" in WRITE+ MODE) as Food_Item_Supply_Txt:
+	
+       WRITE'NEWLINE' + Food_Items_Supply_Template_Txt ARRAY Into Food_Item_Supply_Txt
+	   
+	CLOSE("Food_Item_Supply.txt")
+	
+	
+	REPEAT LOOP UNTIL BROKEN
+
+		PRINT("======================================================================")
+		PRINT("I                        Welcome Customer!                           I")
+		PRINT("======================================================================")
+        PRINT("Please select a menu option via entering the numbers listed")
+
+        PRINT("1. View all food items in each category")
+        PRINT("2. Become a Registered Customer")
+        PRINT("3. Login to program")
+        PRINT("4. Exit the program")
+		
+		PRINT("Enter Menu Number Here:- ")
+		READ Answer
+		
+        IF Answer = "1":
+		
+           	OPEN("Food Items.txt" in READ MODE) as Food_Items_Txt:
+			
+				PRINT======================================================================
+				FOR EVERY line IN Food_Items_Txt:
+					DEFINE line ARRAY
+					SEPERATE STRING AT FIRST OCCURENCE OF ","
+					INSERT into line ARRAY
+					PRINT(OBJECT 1 of line ARRAY,":-",OBJECT 2 of line ARRAY)
+				PRINT======================================================================
+				
+			CLOSE ("Food_Items_Txt")
+			
+        ELIF Answer = "2":
+			
+            PRINT("Please enter your desired username:- ")
+            READ user_name			
+            PRINT("Please enter your desired password:- ")
+            READ account_password			
+            Account_Details = 'NEWLINE' + user_name + "," + account_password + "," + "Registered_Cus"
+            CALL registration FUNCTION with parameter(Account_Details)
+			
+        ELIF Answer = "3":		
+            CALL program_start function with parameter()      
+        ELIF Answer = "4":		
+            EXIT Program with message("You have exited the program")			
+		ELSE:
+			PRINT("---------------------------------------------------------------------")
+            PRINT("You have entered an incorrect number, please enter 1,2,3 or 4")
+            PRINT("---------------------------------------------------------------------")
+		ENDIF
+END
+
+
+
+FUNCTION registration with parameter(Account_Details):
+BEGIN
+		DECLARE User_Details_Txt
+		OPEN("User Details.txt" in APPEND MODE) as User_Details_Txt
+			WRITE Account_Details into User_Details_Txt
+		CLOSE("User Details.txt")
+		PRINT("You are now registered!")
+
+FUNCTION program_start()
+BEGIN
+	REPEAT LOOP UNTIL BROKEN
+		DECLARE = user_name, account_password, user_type
+	
+		PRINT("======================================================================")
+		PRINT("I                         Welcome User                               I")
+		PRINT("======================================================================")
+	
+		PRINT("Enter your username here or enter 'None' to return to the main menu:- ")
+		READ user_name
+		IF user_name = "None":
+			BREAK LOOP
+		ELSE:
+			IF user_name is ONLY WHITESPACE
+				PRINT("---------------------------------------------------------------------")
+				PRINT("Invalid username!")
+				PRINT("---------------------------------------------------------------------")
+			ELSE:	
+				PRINT("Enter account password here:- ")
+				READ account_password
+				user_type = RESULT of get_user_type FUNCTION with parameter(user_name, account_password)
+				IF user_type = "Administrator":
+					CALL admin_menu function with parameter (user_name, account_password)
+				ELIF user_type = "Registered_Cus":
+					CALL regcus_menu with parameter (user_name, account_password)
+				ELSE:
+					PRINT("---------------------------------------------------------------------")
+                    PRINT("Unknown user!")
+                    PRINT("---------------------------------------------------------------------")
+				ENDIF
+			ENDIF	
+		ENDIF
+END
+
+
+FUNCTION get_user_type with parameter (user_name, account_password)
+BEGIN
+	DECLARE User_Details, User_Data_List
+	OPEN ("User Details.txt" in READ MODE) as User_Details
+	DEFINE User_Data_List ARRAY
+	FOR EVERY LINE in User_Details:
+	
+		SEPERATE EVERY line into OBJECTS by ","
+		INSERT OBJECTS into User_Data_List ARRAY
+		IF user_name = OBJECT 1 of User_Data_List ARRAY AND account_password = OBJECT 2 of User_Data_List ARRAY:
+			IF "Administrator" IN line:
+				RETURN "Administrator"
+			ELSE:
+				RETURN "Registered_Cus"
+			ENDIF
+	ELSE:
+		
+        PRINT("----------------------------------------------------------------------")
+        PRINT("You have entered an incorrect username or password, please try again")
+        PRINT("----------------------------------------------------------------------")
+       
+    ENDFOR
+	CLOSE("User_Details.txt")
+	
+END
+
+
+
+
+
+FUNCTION regcus_menu with parameter(username, account_password):
+BEGIN
+	DECLARE Answer, Food_Items_Supply_List, Food_Items_Txt, Food_Item_Supply_Txt, MenuNumber, FoodQuantityBuy, FoodItemBuy, confirmation, Payment_Proof, Payment_confirmation_txt
+REPEAT LOOP UNTIL BROKEN
+	BreakCondition = False
+
+    PRINT("======================================================================")
+    PRINT("User type:-", CALL get_user_type FUNCTION with parameter(username, account_password))
+    PRINT("======================================================================")
+    PRINT("Welcome back", username, ", please select what would you like to do")
+
+    PRINT("1. View all food categories")
+    PRINT("2. View all individual food items available for order")
+    PRINT("3. Search for a specific food item to order")
+    PRINT("4. Return to login screen")
+
+	PRINT("======================================================================")
+	PRINT("Enter menu number here:- ")
+	READ Answer
+    PRINT("======================================================================")
+        IF Answer = "1":
+            OPEN("Food Items.txt" in READ MODE) as Food_Items_Txt:
+			
+                PRINT("======================================================================")
+                READ Food_Items_Txt
+				FOR EVERY LINE in Food_Items_Txt:
+				
+					DEFINE line ARRAY
+					SEPERATE line by "," on FIRST OCCURENCE
+					INSERT into line ARRAY
+					PRINT(FIRST Object of line ARRAY)
+					
+                PRINT("======================================================================")
+				
+			CLOSE("Food Items.txt")
+			
+        ELIF Answer = "2":
+            REPEAT LOOP UNTIL BROKEN
+                IF BreakCondition == True:
+                    BREAK LOOP
+                ELSE:
+                    PRINT("======================================================================")
+                    OPEN("Food Item Supply.txt") as Food_Item_Supply_txt:
+					
+						DEFINE Food_Item_Supply_list_Items ARRAY
+						DEFINE Food_Item_Supply_list ARRAY
+						DEFINE Food_Item ARRAY
+                        READ Food_Item_Supply_txt
+						SEPERATE EVERY line in Food_Items_Supply_Txt into OBJECTS
+						INSERT into Food_Item_Supply_list ARRAY
+						
+                        FOR x IN Food_Item_Supply_list ARRAY:
+						
+                            Position = OBJECT POSITION of x in Food_Item_Supply_list ARRAY
+							SEPERATE x of Food_Item_Supply_list ARRAY at Position into OBJECTS by ","
+							INSERT into Food_Item ARRAY
+							INSERT FIRST OBJECT of Food_Item ARRAY into Food_Item_Supply_list_Items ARRAY
+						
+						ENDFOR
+									
+					CLOSE("Food Item Supply.txt")
+					
+                    OPEN("Food Item Supply.txt") as Food_Items_Supply_Txt:
+					
+						DEFINE FoodItem ARRAY
+						DEFINE Food_Items_Supply_List ARRAY
+						READ Food_Items_Supply_Txt
+						SEPERATE EVERY line into OBJECTS by NEWLINE
+						INSERT into Food_Items_Supply_List ARRAY
+						
+                        FOR FoodItem in Food_Items_Supply_List ARRAY:
+						
+							SEPERATE FoodItem of Food_Item_Supply_list ARRAY into OBJECTS by ","
+							INSERT into FoodItem ARRAY
+							PRINT(FIRST OBJECT of FoodItem ARRAY,":-", SECOND OBJECT of FoodItem ARRAY,"units")
+							
+                        ENDFOR
+						
+					CLOSE("Food Item Supply.txt")
+					
+                    REPEAT LOOP UNTIL BROKEN
+					
+                        PRINT("======================================================================")
+                        PRINT("Which food item do you wish to purchase?:- ")
+						READ FoodItemBuy
+                        PRINT("======================================================================")
+                        IF FoodItemBuy NOT IN Food_Item_Supply_list_Items ARRAY:
+						
+                            PRINT("---------------------------------------------------------------------")
+                            PRINT("Unknown Item!")
+                            PRINT("---------------------------------------------------------------------")
+							
+                        ELSE:
+                            BREAK LOOP						
+						ENDIF	
+							
+                    REPEAT LOOP UNTIL BROKEN:
+					
+                        PRINT("======================================================================")
+                        PRINT("How much of this food item do you wish to buy?:- ")
+						READ FoodQuantityBuy
+                        PRINT("======================================================================")
+						
+                        IF FoodQuantityBuy DOES NOT ONLY CONTAIN NUMBERS
+						
+                            PRINT("---------------------------------------------------------------------")
+                            PRINT("Invalid Number!")
+                            PRINT("---------------------------------------------------------------------")
+							
+                        ELSE:						
+                            BREAK LOOP							
+						ENDIF
+						
+                    REPEAT LOOP UNTIL BROKEN:
+					
+                        PRINT("======================================================================")
+                        PRINT("Your order is:- ", FoodItemBuy, FoodQuantityBuy, "units")
+                        PRINT("Do you wish to confirm your order?")
+                        PRINT("1. Yes")
+                        PRINT("2. No")
+                        PRINT("======================================================================")
+                        PRINT("Enter menu number here:- ")
+						READ MenuNumber
+                        PRINT("======================================================================")
+						
+                        IF MenuNumber = "1":						
+                            confirmation = RESULT OF FUNCTION purchasing with parameter(FoodItemBuy, FoodQuantityBuy)						
+                            IF confirmation = "Yes":
+							
+                                OPEN("Payment confirmation.txt", IN APPEND+ MODE) as Payment_confirmation_txt:							
+                                    Payment_Proof = username + "," + FoodItemBuy + "," + FoodQuantityBuy + NEWLINE
+                                    WRITE Payment_Proof to Payment_confirmation_txt									
+								CLOSE("Payment confirmation.txt")
+								
+                                PRINT("======================================================================")
+                                PRINT("Do you want to buy another food item?")
+                                PRINT("1. Yes")
+                                PRINT("2. No")
+                                PRINT("======================================================================")
+                                PRINT("Enter menu number here:- "))
+								READ MenuNumber
+                                PRINT("======================================================================")
+								
+                                IF MenuNumber = "1":								
+                                    BREAK LOOP									
+                                ELIF MenuNumber = "2":							
+                                    BreakCondition = True
+                                    BREAK LOOP								
+                                ELSE:
+								
+                                    PRINT("---------------------------------------------------------------------")
+                                    PRINT("You have entered an invalid number, please enter 1 or 2")
+                                    PRINT("---------------------------------------------------------------------")
+									
+								ENDIF
+                            ELSE:
+							
+                                PRINT("======================================================================")
+                                PRINT("Do you want to buy another food item?")
+                                PRINT("1. Yes")
+                                PRINT("2. No")
+                                PRINT("======================================================================")
+                                PRINT("Enter menu number here:- ")
+								READ MenuNumber
+                                PRINT("======================================================================")
+								
+                                IF MenuNumber = "1":							
+									BREAK LOOP								
+                                ELIF MenuNumber = "2":								
+                                    BreakCondition = True
+									BREAK LOOP								
+                                ELSE:
+								
+                                    PRINT("---------------------------------------------------------------------")
+                                    PRINT("You have entered an invalid number, please enter 1 or 2")
+                                    PRINT("---------------------------------------------------------------------")
+								
+								ENDIF
+							ENDIF	
+							
+                        ELIF MenuNumber = "2":						
+                            BreakCondition = True
+                            BREAK LOOP							
+                        ELSE:
+						
+                            PRINT("---------------------------------------------------------------------")
+                            PRINT("You have entered an invalid answer, please enter 1 or 2")
+                            PRINT("---------------------------------------------------------------------")
+							
+						ENDIF
+				ENDIF
+				
+        ELIF Answer == "3":
+		
+            REPEAT LOOP UNTIL BROKEN
+				BreakCondition1 = False
+                IF BreakCondition = True:
+                    BREAK LOOP
+                ELSE:
+				
+                    PRINT("======================================================================")
+                    PRINT("Enter food item you wish to search for, enter 'None' to return to the previous menu:- ")
+					READ Food_Item_Search
+                    PRINT("======================================================================")
+					
+                    IF Food_Item_Search = "None":
+						BREAK LOOP	
+                    ELSE:
+					
+                        FoodItemBuy = RESULT OF search_function FUNCTION with parameter(Food_Item_Search)
+						
+                        IF FoodItemBuy = "No":
+                            PASS
+                        ELSE:
+							REPEAT LOOP UNTIL BROKEN:
+								IF BreakCondition1 = True:
+									BREAK LOOP
+								ELSE:
+									OPEN("Food Item Supply.txt" in READ MODE) as Food_Item_Supply_txt:
+										DEFINE ARRAY Food_Item_Supply_list_Items
+										DEFINE ARRAY Food_Item_Supply_list
+										READ Food_Item_Supply_txt
+										SEPERATE EVERY line of Food_Item_Supply_txt into OBJECTS
+										INSERT into Food_Item_Supply_list ARRAY
+										
+									   
+										FOR x IN Food_Item_Supply_list ARRAY:
+									
+											Position = OBJECT POSITION of x in Food_Item_Supply_list ARRAY
+											SEPERATE x of Food_Item_Supply_list ARRAY at Position into OBJECTS by ","
+											INSERT into Food_Item ARRAY
+											INSERT FIRST OBJECT of Food_Item ARRAY into Food_Item_Supply_list_Items ARRAY	
+											
+										ENDFOR
+										
+									CLOSE("Food Item Supply.txt")
+									
+									PRINT("======================================================================")
+									PRINT("Do you wish to buy this food item?")
+									PRINT("1. Yes")
+									PRINT("2. No")
+									PRINT("======================================================================")
+									PRINT("Enter menu number here:- "))
+									READ Answer
+									PRINT("======================================================================")
+									
+									IF Answer = "1":
+									
+										REPEAT LOOP UNTIL BROKEN
+										
+											PRINT("======================================================================")
+											PRINT("How much of this food item do you wish to buy?:- ")
+											READ FoodQuantityBuy
+											PRINT("======================================================================")
+											IF FoodQuantityBuy IS NOT ONLY NUMBERS:
+											
+												PRINT("---------------------------------------------------------------------")
+												PRINT("Invalid Number!")
+												PRINT("---------------------------------------------------------------------")
+												
+											ELSE:
+											
+												BREAK LOOP
+												
+											ENDIF
+											
+										REPEAT LOOP UNTIL BROKEN
+										
+											PRINT("======================================================================")
+											PRINT("Your order is:- ", FoodItemBuy, FoodQuantityBuy, "units")
+											PRINT("Do you wish to confirm your order?")
+											PRINT("1. Yes")
+											PRINT("2. No")
+											PRINT("======================================================================")
+											PRINT("Enter menu number here:- ")
+											READ MenuNumber
+											PRINT("======================================================================")
+											
+											IF MenuNumber = "1":
+												confirmation = RESULT OF FUNCTION purchasing with parameter(FoodItemBuy, FoodQuantityBuy)
+													IF confirmation = "Yes":
+										
+														OPEN("Payment confirmation.txt", IN APPEND+ MODE) as Payment_confirmation_txt:
+															Payment_Proof = username + "," + FoodItemBuy + "," + FoodQuantityBuy + NEWLINE
+															WRITE Payment_Proof to Payment_confirmation_txt									
+														CLOSE("Payment confirmation.txt")
+											
+														PRINT("======================================================================")
+														PRINT("Do you want to buy another food item?")
+														PRINT("1. Yes")
+														PRINT("2. No")
+														PRINT("======================================================================")
+														PRINT("Enter menu number here:- "))
+														READ MenuNumber
+														PRINT("======================================================================")
+											
+														IF MenuNumber = "1":
+															BreakCondition1 = 'True'													
+															BREAK LOOP								
+														ELIF MenuNumber = "2":								
+															BreakCondition = 'True'
+															BreakCondition1 = 'True'	
+															BREAK LOOP							
+														ELSE:							
+															PRINT("---------------------------------------------------------------------")
+															PRINT("You have entered an invalid number, please enter 1 or 2")
+															PRINT("---------------------------------------------------------------------")									
+														ENDIF
+														
+													ELSE:
+												
+														PRINT("======================================================================")
+														PRINT("Do you want to buy another food item?")
+														PRINT("1. Yes")
+														PRINT("2. No")
+														PRINT("======================================================================")
+														PRINT("Enter menu number here:- ")
+														READ MenuNumber
+														PRINT("======================================================================")
+												
+														IF MenuNumber = "1":
+															BreakCondition1 = 'True'													
+															BREAK LOOP									
+														ELIF MenuNumber = "2":								
+															BreakCondition = 'True'
+															BreakCondition1 = 'True'
+															BREAK LOOP								
+														ELSE:								
+															PRINT("---------------------------------------------------------------------")
+															PRINT("You have entered an invalid number, please enter 1 or 2")
+															PRINT("---------------------------------------------------------------------")							
+														ENDIF
+													ENDIF	
+												
+											ELIF MenuNumber = "2":						
+												BreakCondition = True
+												BreakCondition1 = True
+												BREAK LOOP							
+											ELSE:						
+												PRINT("---------------------------------------------------------------------")
+												PRINT("You have entered an invalid answer, please enter 1 or 2")
+												PRINT("---------------------------------------------------------------------")							
+											ENDIF
+									ELIF answer = "2":
+										BreakCondition = 'True'
+										BREAK LOOP
+									ELSE:
+										PRINT("---------------------------------------------------------------------")
+										PRINT("You have entered an invalid answer, please enter 1 or 2")
+										PRINT("---------------------------------------------------------------------")
+									ENDIF	
+								ENDIF
+						ENDIF	
+					ENDIF
+				ENDIF
+				
+		ELIF Answer = "4":
+		
+            BREAKLOOP
+			
+        ELSE:
+            PRINT("---------------------------------------------------------------------")
+            PRINT("You have entered an incorrect answer, please enter a number from 1 to 4")
+            PRINT("---------------------------------------------------------------------")
+		ENDIF
+END
+
+
+
+
+
+FUNCTION admin_menu with parameter(username, account_password):
+BEGIN
+	DECLARE CategoryMenuNumber, FoodItems_txt, Quantity, RepeatQuestionAnswer, Food_Items_ModifyTxt, ModifyFood, Follow_up_answer, New_Food_Name, Follow_up_answer2, RecordMenuNumber, Payment_confirmation_Txt, MenuNumber
+	REPEAT LOOP UNTIL BROKEN
+		BreakCondition = FALSE
+
+		PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		PRINT("User type:-", CALL get_user_type FUNCTION with parameter(username, account_password))
+		PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		PRINT("Welcome back", username,)
+		PRINT("Please select a menu option via entering the numbers listed")
+
+		PRINT("1. Add a new food Item into a pre-existing category")
+		PRINT("2. Modify a food item's details")
+		PRINT("3. Access records present in System")
+		PRINT("4. Search a specific customer's order/payments in system")
+		PRINT("5. Return to login Screen")
+
+		PRINT("======================================================================")
+		PRINT("Enter menu number here:- ")
+		READ MenuNumber
+		PRINT("======================================================================")
+
+		CONVERT MenuNumber from int to string
+		
+		IF MenuNumber = "5":
+			BREAK LOOP
+		ELIF MenuNumber = "1":  
+		
+			BreakCondition = False
+			REPEAT LOOP UNTIL BROKEN:
+				IF BreakCondition = True:
+					BREAK LOOP
+				ELSE:
+					PRINT("======================================================================")
+					PRINT("Please select which food category do you wish to add a new food item to:- ")
+					
+					PRINT("1. Grains")
+					PRINT("2. RawMeats")
+					PRINT("3. Dairy")
+					PRINT("4. Vegetables")
+					PRINT("5. Fruits")
+					
+					PRINT("======================================================================")
+					PRINT("Enter menu number here:- ")
+					READ CategoryMenuNumber
+					PRINT("======================================================================")
+				ENDIF
+
+					OPEN ("Food Items.txt" in READ MODE) as FoodItems_txt:
+						READ FoodItems_txt
+						DEFINE Food_List ARRAY
+						INSERT EACH line of FoodItems_txt as OBJECTS into Food_list ARRAY
+						DEFINE ARRAY Food_List_Grains1, Food_List_RawMeats1, Food_List_Dairy1, Food_List_Vegetables1, Food_List_Fruits1, Food_List, Food_Items_Modify1
+						Food_List = FoodItems_txt
+						Food_List_Grains1 ARRAY = FIRST OBJECT OF Food_List ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_List_RawMeats1 ARRAY = SECOND OBJECT OF Food_List ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_List_Dairy1 ARRAY = THIRD OBJECT OF Food_List ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_List_Vegetables1 ARRAY = FOURTH OBJECT OF Food_List ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_List_Fruits1 ARRAY = FIFTH OBJECT OF Food_List ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_Items_Modify1 ARRAY = Food_List_Fruits1 ARRAY + Food_List_Vegetables1 ARRAY + Food_List_Dairy1 ARRAY + Food_List_RawMeats1 ARRAY + Food_List_Grains1 ARRAY
+					CLOSE ("FoodItems_txt")
+					
+					
+						IF CategoryMenuNumber = "1":
+						
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("======================================================================")
+								PRINT("Please enter the name of the food item you wish to add to the Grains Category:- ")
+								READ Answer
+								PRINT("======================================================================")
+								IF Answer is NOT IN Food_List_Grains1 ARRAY AND Answer is NOT IN FOOD_Items_Modify1 ARRAY:
+									IF Answer DOES NOT ONLY CONTAIN ALPHABETS
+										PRINT("---------------------------------------------------------------------")
+										PRINT("You have entered a invalid food item, please enter a different food item")
+										PRINT("---------------------------------------------------------------------")
+									ELSE:
+										BREAK LOOP
+									ENDIF
+		
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered a invalid food item, please enter a different food item")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+								
+							REPEAT LOOP UNTIL BROKEN:
+								PRINT("======================================================================")
+								PRINT("Please enter the amount of food item you are adding to the system:- ")
+								READ Quantity
+								PRINT("======================================================================")
+								IF Quantity DOES NOT ONLY CONTAIN NUMBERS
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Quantity of food item can only be defined by numbers!")
+									PRINT("---------------------------------------------------------------------")
+								ELSE:
+									BREAK LOOP
+								ENDIF
+								
+							CALL grains FUNCTION with parameter(Answer, Quantity)
+						
+						ELIF CategoryMenuNumber = "2":
+							
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("======================================================================")
+								PRINT("Please enter the name of the food item you wish to add to the Raw Meats Category:- ")
+								READ Answer
+								PRINT("======================================================================")
+								IF Answer is NOT IN Food_List_RawMeats1 ARRAY AND Answer is NOT IN FOOD_Items_Modify1 ARRAY:
+									IF Answer DOES NOT ONLY CONTAIN ALPHABETS
+										PRINT("---------------------------------------------------------------------")
+										PRINT("You have entered a invalid food item, please enter a different food item")
+										PRINT("---------------------------------------------------------------------")
+									ELSE:
+										BREAK LOOP
+									ENDIF
+		
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered a invalid food item, please enter a different food item")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+								
+							REPEAT LOOP UNTIL BROKEN:
+								PRINT("======================================================================")
+								PRINT("Please enter the amount of food item you are adding to the system:- ")
+								READ Quantity
+								PRINT("======================================================================")
+								IF Quantity DOES NOT ONLY CONTAIN NUMBERS
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Quantity of food item can only be defined by numbers!")
+									PRINT("---------------------------------------------------------------------")
+								ELSE:
+									BREAK LOOP
+								ENDIF
+									
+							CALL raw_meats FUNCTION with parameter(Answer, Quantity)
+								
+							
+						ELIF CategoryMenuNumber = "3":
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("======================================================================")
+								PRINT("Please enter the name of the food item you wish to add to the Dairy Category:- ")
+								READ Answer
+								PRINT("======================================================================")
+								IF Answer is NOT IN Food_List_Dairy1 ARRAY AND Answer is NOT IN FOOD_Items_Modify1 ARRAY:
+									IF Answer DOES NOT ONLY CONTAIN ALPHABETS
+										PRINT("---------------------------------------------------------------------")
+										PRINT("You have entered a invalid food item, please enter a different food item")
+										PRINT("---------------------------------------------------------------------")
+									ELSE:
+										BREAK LOOP
+									ENDIF
+		
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered a invalid food item, please enter a different food item")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+								
+							REPEAT LOOP UNTIL BROKEN:
+								PRINT("======================================================================")
+								PRINT("Please enter the amount of food item you are adding to the system:- ")
+								READ Quantity
+								PRINT("======================================================================")
+								IF Quantity DOES NOT ONLY CONTAIN NUMBERS
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Quantity of food item can only be defined by numbers!")
+									PRINT("---------------------------------------------------------------------")
+								ELSE:
+									BREAK LOOP
+								ENDIF
+							
+						CALL dairy FUNCTION with parameter(Answer, Quantity)
+								
+						ELIF CategoryMenuNumber = "4":
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("======================================================================")
+								PRINT("Please enter the name of the food item you wish to add to the Vegetables Category:- ")
+								READ Answer
+								PRINT("======================================================================")
+								IF Answer is NOT IN Food_List_Vegetables1 ARRAY AND Answer is NOT IN FOOD_Items_Modify1 ARRAY:
+									IF Answer DOES NOT ONLY CONTAIN ALPHABETS
+										PRINT("---------------------------------------------------------------------")
+										PRINT("You have entered a invalid food item, please enter a different food item")
+										PRINT("---------------------------------------------------------------------")
+									ELSE:
+										BREAK LOOP
+									ENDIF
+		
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered a invalid food item, please enter a different food item")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+								
+							REPEAT LOOP UNTIL BROKEN:
+								PRINT("======================================================================")
+								PRINT("Please enter the amount of food item you are adding to the system:- ")
+								READ Quantity
+								PRINT("======================================================================")
+								IF Quantity DOES NOT ONLY CONTAIN NUMBERS
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Quantity of food item can only be defined by numbers!")
+									PRINT("---------------------------------------------------------------------")
+								ELSE:
+									BREAK LOOP
+								ENDIF
+								
+							CALL vegetables FUNCTION with parameter(Answer, Quantity)
+							
+						ELIF CategoryMenuNumber = "5":
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("======================================================================")
+								PRINT("Please enter the name of the food item you wish to add to the Fruits Category:- ")
+								READ Answer
+								PRINT("======================================================================")
+								IF Answer is NOT IN Food_List_Fruits1 ARRAY AND Answer is NOT IN FOOD_Items_Modify1 ARRAY:
+									IF Answer DOES NOT ONLY CONTAIN ALPHABETS
+										PRINT("---------------------------------------------------------------------")
+										PRINT("You have entered a invalid food item, please enter a different food item")
+										PRINT("---------------------------------------------------------------------")
+									ELSE:
+										BREAK LOOP
+									ENDIF
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered a invalid food item, please enter a different food item")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+								
+							REPEAT LOOP UNTIL BROKEN:
+								PRINT("======================================================================")
+								PRINT("Please enter the amount of food item you are adding to the system:- ")
+								READ Quantity
+								PRINT("======================================================================")
+								IF Quantity DOES NOT ONLY CONTAIN NUMBERS
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Quantity of food item can only be defined by numbers!")
+									PRINT("---------------------------------------------------------------------")
+								ELSE:
+									BREAK LOOP
+								ENDIF
+								
+							CALL fruits FUNCTION with parameter(Answer, Quantity)	
+						
+						ELSE:
+							PRINT("======================================================================")
+                            PRINT("You have entered an invalid answer, please enter a number from 1 to 5")
+                            PRINT("======================================================================")
+						ENDIF
+							
+				REPEAT LOOP UNTIL BROKEN
+						PRINT("======================================================================")
+						PRINT("Would you like to add another food item or return to the admin screen?:- ")
+						
+						PRINT("1. Add another food item")
+						PRINT("2. Return to admin menu ")
+
+						PRINT("======================================================================")
+						PRINT("Enter menu number here:- "))
+						READ RepeatQuestionAnswer
+						CONVERT from int to string
+						PRINT("======================================================================")
+
+
+						IF RepeatQuestionAnswer = "1":
+							BREAK LOOP
+						ELIF RepeatQuestionAnswer = "2":
+							BreakCondition = True
+							BREAK LOOP
+						ELSE:
+							PRINT("---------------------------------------------------------------------")
+							PRINT("You have entered an invalid answer, please enter number 1 or 2")
+							PRINT("---------------------------------------------------------------------")
+						ENDIF
+		ELIF MenuNumber = "2"
+			REPEAT LOOP UNTIL BROKEN
+				IF BreakCondition = True:
+					BREAK LOOP
+				ELSE:
+					New_Food_Name = "0"
+					OPEN ("Food Items.txt" in READ MODDE) as Food_Items_Txt:
+						PRINT("======================================================================")
+						FOR EVERY LINE in Food_Items_Txt:
+							DEFINE line ARRAY
+							SEPERATE LINE by "," ONCE AND INSERT INTO line ARRAY
+							PRINT(Object 1 of line ARRAY,":-",Object 2 of line ARRAY)
+						ENDFOR
+					CLOSE ("Food Items.txt")
+					
+					OPEN("Food Items.txt") as Food_Items_ModifyTxt:
+						READ Food_Items_ModifyTxt
+						DEFINE Food_Items_Modify_list ARRAY
+						INSERT EACH line of Food_Items_ModifyTxt as OBJECTS into Food_Items_Modify_list ARRAY
+						Food_Items_Modify_Grain_list ARRAY = FIRST Object of Food_Items_Modify_list ARRAY SEPERATED INTO MORE OBJECTS  by ","
+						Food_Items_Modify_RawMeats_list ARRAY = SECOND Object of Food_Items_Modify_list ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_Items_Modify_Dairy_list ARRAY = THIRD Object of Food_Items_Modify_list ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_Items_Modify_Vegetables_list ARRAY = FOURTH Object of Food_Items_Modify_list ARRAY SEPERATED INTO MORE OBJECTS by ","
+						Food_Items_Modify_Fruits_list ARRAY = FIFTH Object of Food_Items_Modify_list ARRAY SEPERATED INTO MORE OBJECTS ","
+						Food_Items_Modify1 ARRAY = Food_Items_Modify_Fruits_list ARRAY + Food_Items_Modify_Vegetables_list ARRAY + Food_Items_Modify_Dairy_list ARRAY + Food_Items_Modify_RawMeats_list ARRAY + Food_Items_Modify_Grain_list ARRAY
+					CLOSE("Food Items.txt")
+					
+					REPEAT LOOP UNTIL BROKEN
+						PRINT("===============================================================================================")
+						PRINT("Which Food Item do you wish to Modify? Enter 'None' if you wish to return to the admin menu:- ")	
+						READ ModifyFood		
+						PRINT("===============================================================================================")
+						IF ModifyFood is NOT EQUAL to FIRST OBJECT of Food_Items_Modify_Fruits_list ARRAY AND Food_Items_Modify_Vegetables_list ARRAY AND Food_Items_Modify_Dairy_list ARRAY AND Food_Items_Modify_RawMeats_list ARRAY AND Food_Items_Modify_Grain_list ARRAY
+							BREAK LOOP
+						ELSE:
+							PRINT("---------------------------------------------------------------------")
+							PRINT("You can't modify category names!")
+							PRINT("---------------------------------------------------------------------")
+						ENDIF
+				
+					IF ModifyFood = "None":
+						BREAK LOOP
+							
+					ELIF ModifyFood is IN Food_Items_Modify_Grain_list ARRAY:
+			
+						PRINT("What do you wish to change about this food item?")
+					
+						PRINT("1. Rename food item")
+						PRINT("2. Remove food item")
+						PRINT("3. Increase/Decrease food item quantity")
+						PRINT("4. Return to admin menu")
+					
+						PRINT("======================================================================")
+						PRINT("Enter menu number here:- ")
+						READ Follow_up_answer
+						PRINT("======================================================================")
+						IF Follow_up_answer = "1":
+							REPEAT LOOP UNTIL BROKEN:
+							
+								PRINT("What do you wish to rename this food item to?:- ")
+								READ New_Food_Name
+								PRINT("================================================================================================")
+								IF New_Food_Name IS NOT ALPHABET LETTERS ONLY
+									IF New_Food_Name is NOT IN Food_Items_Modify1 ARRAY:
+										CALL modify_grains_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+										BREAK LOOP
+									ELSE:
+										PRINT("---------------------------------------------------------------------")
+                                        PRINT("You cannot rename food items to a name which already exists!")
+                                        PRINT("---------------------------------------------------------------------")
+									ENDIF
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Please only use letters to rename this food item, special characters and numbers are not allowed")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+									
+						ELIF Follow_up_answer = "2":
+						
+							CALL modify_grains_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+							
+						ELIF Follow_up_answer == "3":
+						
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("==============================================================")
+								PRINT("Do you wish to increase or decrease this food item's quantity?")
+								PRINT("==============================================================")
+							
+								PRINT("1. Increase this food item's quantity")
+								PRINT("2. Decrease this food item's quantity")
+								PRINT("3. Return to admin menu")
+							
+								PRINT("=======================================================")
+								PRINT("Enter menu number here:- ")
+								READ Follow_up_answer2
+								PRINT("=======================================================")
+								IF Follow_up_answer2 = "3":
+									BREAK LOOP
+								ELIF Follow_up_answer2 = "1":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to increase this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELIF Follow_up_answer2 = "2":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to decrease this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered an incorrect number, please enter 1,2 or 3")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+						ELIF Follow_up_answer = "4"
+							BREAK LOOP
+						ELSE:
+							PRINT("---------------------------------------------------------------------")
+							PRINT("You have entered an invalid number, please select your food item again and enter 1,2,3 or 4 only")
+							PRINT("---------------------------------------------------------------------")
+						ENDIF
+
+							
+					ELIF ModifyFood in Food_Items_Modify_RawMeats_list ARRAY:
+					
+						PRINT("What do you wish to change about this food item?")
+					
+						PRINT("1. Rename food item")
+						PRINT("2. Remove food item")
+						PRINT("3. Increase/Decrease food item quantity")
+						PRINT("4. Return to admin menu")
+					
+						PRINT("======================================================================")
+						PRINT("Enter menu number here:- ")
+						READ Follow_up_answer
+						PRINT("======================================================================")
+						IF Follow_up_answer = "1":
+							REPEAT LOOP UNTIL BROKEN:
+							
+								PRINT("What do you wish to rename this food item to?:- ")
+								READ New_Food_Name
+								PRINT("================================================================================================")
+								IF New_Food_Name IS NOT ALPHABET LETTERS ONLY
+									IF New_Food_Name is NOT IN FOOD_Items_Modify1 ARRAY:
+										CALL modify_rawmeats_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+											BREAK LOOP
+									ELSE:
+										PRINT("---------------------------------------------------------------------")
+                                        PRINT("You cannot rename food items to a name which already exists!")
+                                        PRINT("---------------------------------------------------------------------")
+									ENDIF
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Please only use letters to rename this food item, special characters and numbers are not allowed")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+									
+						ELIF Follow_up_answer = "2":
+						
+							CALL modify_rawmeats_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+							
+						ELIF Follow_up_answer == "3":
+						
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("==============================================================")
+								PRINT("Do you wish to increase or decrease this food item's quantity?")
+								PRINT("==============================================================")
+							
+								PRINT("1. Increase this food item's quantity")
+								PRINT("2. Decrease this food item's quantity")
+								PRINT("3. Return to admin menu")
+							
+								PRINT("=======================================================")
+								PRINT("Enter menu number here:- ")
+								READ Follow_up_answer2
+								PRINT("=======================================================")
+								IF Follow_up_answer2 = "3":
+									BREAK LOOP
+								ELIF Follow_up_answer2 = "1":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to increase this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELIF Follow_up_answer2 = "2":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to decrease this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered an incorrect number, please enter 1,2 or 3")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+						ELIF Follow_up_answer = "4"
+							BREAK LOOP
+						ELSE:
+							PRINT("---------------------------------------------------------------------")
+							PRINT("You have entered an invalid number, please select your food item again and enter 1,2,3 or 4 only")
+							PRINT("---------------------------------------------------------------------")
+						ENDIF
+						
+					ELIF ModifyFood in Food_Items_Modify_Dairy_list ARRAY:
+					
+						PRINT("What do you wish to change about this food item?")
+					
+						PRINT("1. Rename food item")
+						PRINT("2. Remove food item")
+						PRINT("3. Increase/Decrease food item quantity")
+						PRINT("4. Return to admin menu")
+					
+						PRINT("======================================================================")
+						PRINT("Enter menu number here:- ")
+						READ Follow_up_answer
+						PRINT("======================================================================")
+						IF Follow_up_answer = "1":
+							REPEAT LOOP UNTIL BROKEN:
+							
+								PRINT("What do you wish to rename this food item to?:- ")
+								READ New_Food_Name
+								PRINT("================================================================================================")
+								IF New_Food_Name IS NOT ALPHABET LETTERS ONLY
+									IF New_Food_Name is NOT IN FOOD_Items_Modify1 ARRAY:
+										CALL modify_dairy_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+											BREAK LOOP
+									ELSE:
+										PRINT("---------------------------------------------------------------------")
+                                        PRINT("You cannot rename food items to a name which already exists!")
+                                        PRINT("---------------------------------------------------------------------")
+									ENDIF
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Please only use letters to rename this food item, special characters and numbers are not allowed")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+									
+						ELIF Follow_up_answer = "2":
+						
+							CALL modify_dairy_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+							
+						ELIF Follow_up_answer == "3":
+						
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("==============================================================")
+								PRINT("Do you wish to increase or decrease this food item's quantity?")
+								PRINT("==============================================================")
+							
+								PRINT("1. Increase this food item's quantity")
+								PRINT("2. Decrease this food item's quantity")
+								PRINT("3. Return to modify menu")
+							
+								PRINT("=======================================================")
+								PRINT("Enter menu number here:- ")
+								READ Follow_up_answer2
+								PRINT("=======================================================")
+								IF Follow_up_answer2 = "3":
+									BREAK LOOP
+								ELIF Follow_up_answer2 = "1":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to increase this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELIF Follow_up_answer2 = "2":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to decrease this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered an incorrect number, please enter 1,2 or 3")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+						ELIF Follow_up_answer = "4"
+							BREAK LOOP
+						ELSE:
+							PRINT("---------------------------------------------------------------------")
+							PRINT("You have entered an invalid number, please select your food item again and enter 1,2,3 or 4 only")
+							PRINT("---------------------------------------------------------------------")
+						ENDIF
+							
+					
+					ELIF ModifyFood in Food_Items_Modify_Vegetables_list:
+					
+						PRINT("What do you wish to change about this food item?")
+					
+						PRINT("1. Rename food item")
+						PRINT("2. Remove food item")
+						PRINT("3. Increase/Decrease food item quantity")
+						PRINT("4. Return to admin menu")
+					
+						PRINT("======================================================================")
+						PRINT("Enter menu number here:- ")
+						READ Follow_up_answer
+						PRINT("======================================================================")
+						IF Follow_up_answer = "1":
+							REPEAT LOOP UNTIL BROKEN:
+							
+								PRINT("What do you wish to rename this food item to?:- ")
+								READ New_Food_Name
+								PRINT("================================================================================================")
+								IF New_Food_Name IS NOT ALPHABET LETTERS ONLY
+									IF New_Food_Name is NOT IN FOOD_Items_Modify1 ARRAY:
+										CALL modify_vegetables_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+											BREAK LOOP
+									ELSE:
+										PRINT("---------------------------------------------------------------------")
+                                        PRINT("You cannot rename food items to a name which already exists!")
+                                        PRINT("---------------------------------------------------------------------")
+									ENDIF
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Please only use letters to rename this food item, special characters and numbers are not allowed")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+									
+						ELIF Follow_up_answer = "2":
+						
+							CALL modify_vegetables_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+							
+						ELIF Follow_up_answer == "3":
+						
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("==============================================================")
+								PRINT("Do you wish to increase or decrease this food item's quantity?")
+								PRINT("==============================================================")
+							
+								PRINT("1. Increase this food item's quantity")
+								PRINT("2. Decrease this food item's quantity")
+								PRINT("3. Return to modify menu")
+							
+								PRINT("=======================================================")
+								PRINT("Enter menu number here:- ")
+								READ Follow_up_answer2
+								PRINT("=======================================================")
+								IF Follow_up_answer2 = "3":
+									BREAK LOOP
+								ELIF Follow_up_answer2 = "1":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to increase this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELIF Follow_up_answer2 = "2":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to decrease this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered an incorrect number, please enter 1,2 or 3")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+						ELIF Follow_up_answer = "4"
+							BREAK LOOP
+						ELSE:
+							PRINT("---------------------------------------------------------------------")
+							PRINT("You have entered an invalid number, please select your food item again and enter 1,2,3 or 4 only")
+							PRINT("---------------------------------------------------------------------")
+						ENDIF
+							
+					ELIF ModifyFood in Food_Items_Modify_Fruits_list:
+					
+						PRINT("What do you wish to change about this food item?")
+					
+						PRINT("1. Rename food item")
+						PRINT("2. Remove food item")
+						PRINT("3. Increase/Decrease food item quantity")
+						PRINT("4. Return to admin menu")
+					
+						PRINT("======================================================================")
+						PRINT("Enter menu number here:- ")
+						READ Follow_up_answer
+						PRINT("======================================================================")
+						IF Follow_up_answer = "1":
+							REPEAT LOOP UNTIL BROKEN:
+							
+								PRINT("What do you wish to rename this food item to?:- ")
+								READ New_Food_Name
+								PRINT("================================================================================================")
+								IF New_Food_Name IS NOT ALPHABET LETTERS ONLY
+									IF New_Food_Name is NOT IN FOOD_Items_Modify1 ARRAY:
+										CALL modify_fruits_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+											BREAK LOOP
+									ELSE:
+										PRINT("---------------------------------------------------------------------")
+                                        PRINT("You cannot rename food items to a name which already exists!")
+                                        PRINT("---------------------------------------------------------------------")
+									ENDIF
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("Please only use letters to rename this food item, special characters and numbers are not allowed")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+									
+						ELIF Follow_up_answer = "2":
+						
+							CALL modify_fruits_rename_remove FUNCTION with parameter(ModifyFood, Follow_up_answer, New_Food_Name)
+							
+						ELIF Follow_up_answer == "3":
+						
+							REPEAT LOOP UNTIL BROKEN
+								PRINT("==============================================================")
+								PRINT("Do you wish to increase or decrease this food item's quantity?")
+								PRINT("==============================================================")
+							
+								PRINT("1. Increase this food item's quantity")
+								PRINT("2. Decrease this food item's quantity")
+								PRINT("3. Return to modify menu")
+							
+								PRINT("=======================================================")
+								PRINT("Enter menu number here:- ")
+								READ Follow_up_answer2
+								PRINT("=======================================================")
+								IF Follow_up_answer2 = "3":
+									BREAK LOOP
+								ELIF Follow_up_answer2 = "1":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to increase this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELIF Follow_up_answer2 = "2":
+									REPEAT LOOP UNTIL BROKEN
+										PRINT("=======================================================")
+										PRINT("By how much do you wish to decrease this food item's quantity?: -")
+										READ Quantity
+										PRINT("=======================================================")
+										IF Quantity is NOT ONLY NUMBERS:
+											PRINT("---------------------------------------------------------------------")
+											PRINT("You can only use numbers!")
+											PRINT("---------------------------------------------------------------------")
+										ELSE:
+											BREAK LOOP
+										ENDIF
+									CALL modify_quantity FUNCTION with parameter(ModifyFood, Follow_up_answer2, Quantity)
+								ELSE:
+									PRINT("---------------------------------------------------------------------")
+									PRINT("You have entered an incorrect number, please enter 1,2 or 3")
+									PRINT("---------------------------------------------------------------------")
+								ENDIF
+						ELIF Follow_up_answer = "4"
+							BREAK LOOP
+						ELSE:
+							PRINT("---------------------------------------------------------------------")
+							PRINT("You have entered an invalid number, please select your food item again and enter 1,2,3 or 4 only")
+							PRINT("---------------------------------------------------------------------")
+						ENDIF
+							
+					ELSE:
+						PRINT("---------------------------------------------------------------------")
+						PRINT("You have entered a unknown item, please try again")
+						PRINT("---------------------------------------------------------------------")
+					ENDIF
+		ELIF MenuNumber = "3"
+		
+			REPEAT LOOP UNTIL BROKEN
+                PRINT("======================================================================")
+                PRINT("I    Please select which records you wish to access in the system    I")
+                PRINT("======================================================================")
+          
+                PRINT("1. Food Categories")
+                PRINT("2. Food Items")
+                PRINT("3. Customer Orders")
+                PRINT("4. Return to Admin Menu")
+        
+                PRINT("======================================================================")
+                PRINT(" Enter menu number here:- ")
+				READ RecordMenuNumber
+                PRINT("======================================================================")
+                IF RecordMenuNumber = "4":
+				
+                    BREAK LOOP
+					
+                ELIF RecordMenuNumber = "1":
+				
+                    OPEN("Food Items.txt" in READ MODE) as Food_Items_Txt:
+                        PRINT("=========================================================================")
+                        FOR EVERY line in Food_Items_Txt:
+							DEFINE line ARRAY
+							SEPERATE string in line by "," ON FIRST OCCURENCE
+							INSERT into line ARRAY
+                            PRINT(FIRST Object of line ARRAY)
+                        PRINT("=========================================================================")
+					CLOSE("FoodItems.txt")
+					
+                ELIF RecordMenuNumber = "2":
+				
+                    OPEN("Food Items.txt" in READ MODE) as Food_Items_Txt:
+                        PRINT("=========================================================================")
+                        FOR EVERY line in Food_Items_Txt:
+							DEFINE line ARRAY
+							SEPERATE string in line by "," ON FIRST OCCURENCE
+							INSERT into line ARRAY
+                            PRINT(FIRST Object of line ARRAY,":-",SECOND Object of line ARRAY)
+                        PRINT("=========================================================================")
+					CLOSE("FoodItems.txt")
+					
+                ELIF RecordMenuNumber == "3":
+                    
+					OPEN("Payment confirmation.txt" in READ MODE) as Payment_confirmation_Txt:
+						PRINT("=========================================================================")
+						FOR EVERY line in Payment_confirmation_Txt:
+							DEFINE line ARRAY
+							SEPERATE string in line by "," ON EVERY OCCURENCE
+							INSERT into line ARRAY
+							IF line has WHITESPACE:
+								skip this line
+							ELSE:
+								PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+								PRINT("Customer:-",FIRST OBJECT of line ARRAY)
+								PRINT("Item:-",SECOND OBJECT of line ARRAY)
+								PRINT("Units:-",SECOND OBJECT of line ARRAY)
+								PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+							ENDIF
+						PRINT("=========================================================================")
+					CLOSE("Payment confirmation.txt")
+				ELSE:
+					PRINT("---------------------------------------------------------------------")
+                    PRINT("You have entered an invalid answer, please enter a number from 1 to 4")
+                    PRINT("---------------------------------------------------------------------")
+				ENDIF
+
+		ELIF MenuNumber = "4":
+			REPEAT LOOP UNTIL BROKEN
+				IF BreakCondition = True:
+					BREAK LOOP
+				ELSE:
+				    PRINT("======================================================================")
+                    PRINT("Which customer's order records do you wish to find?:- ")
+					READ customer_name
+                    PRINT("======================================================================")
+                    OPEN("Payment confirmation.txt") as Payment_confirmation_Txt:
+					
+						READ Payment_confirmation_Txt
+						DEFINE ARRAY Payment_list1
+						SEPERATE EVERY line of Payment_confirmation_Txt into OBJECTS
+						INSERT into Payment_list1 ARRAY
+						
+						IF customer_name NOT IN Payment_list1 ARRAY:
+						
+                            PRINT("---------------------------------------------------------------------")
+                            PRINT("no records found!")
+                            PRINT("---------------------------------------------------------------------")
+							
+                        IF Payment_list1 ARRAY is EMPTY:
+						
+                            PRINT("---------------------------------------------------------------------")
+                            PRINT("no records found")
+                            PRINT("---------------------------------------------------------------------")
+							
+                        ELSE:
+                            FOR EVERY OBJECT in Payment_list1 ARRAY:
+							
+                                IF customer_name is IN x:
+								
+								DEFINE x ARRAY
+								SEPERATE by "," ON EVERY OCCURANCE
+								INSERT into x ARRAY
+                                    PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                                    PRINT("Customer:- ", FIRST OBJECT of x ARRAY)
+                                    PRINT("Item:- ", SECOND OBJECT of x ARRAY)
+                                    PRINT("Units:- ", THIRD OBJECT of x ARRAY)
+                                    PRINT("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+						ENDIF
+					CLOSE("Payment confirmation.txt)
+
+                    REPEAT LOOP UNTIL BROKEN
+					
+                        PRINT("======================================================================")
+                        PRINT("Do you wish to search again?")
+                        PRINT("")
+                        PRINT("1. Yes")
+                        PRINT("2. Return to admin menu")
+                        PRINT("")
+                        PRINT("======================================================================")
+                        PRINT("Enter menu number here?:- ")
+						READ Answer
+                        PRINT("======================================================================")
+                        IF Answer = "1":
+                            BREAK LOOP
+                        ELIF Answer = "2":
+                            BreakCondition = True
+                            BREAKLOOP
+                        ELSE:
+                            PRINT("---------------------------------------------------------------------")
+                            PRINT("You have entered an invalid answer, please enter 1 or 2")
+                            PRINT("---------------------------------------------------------------------")
+						ENDIF
+				ENDIF
+		ELSE:
+            PRINT("=========================================================================")
+            PRINT("You have entered an invalid answer, please enter a number from 1 to 5")
+            PRINT("=========================================================================")	
+		ENDIF
+END
+
+	
+
+FUNCTION modify_quantity with parameter(FoodItemModify, Option, UserQuantity):
+BEGIN
+	DECLARE  Food_Items_Supply_Modify_Txt, Food_Item_Supply_List_Txt, PreviousQuantity, NewQuantity
+	
+    OPEN("Food Item Supply.txt") as Food_Items_Supply_Modify_Txt:
+	
+		DEFINE ARRAY Food_Item_Supply_List 
+		DEFINE ARRAY Food_Item_Supply_ListModified 
+		
+		READ Food_Items_Supply_Modify_Txt
+		SEPERATE EVERY line OF Food_Items_Supply_Modify_Txt into OBJECTS by ","
+		INSERT OBJECTS into Food_Item_Supply_List ARRAY
+		
+        FOR Food_Item in Food_Item_Supply_List ARRAY:
+		
+            IF FoodItemBuy in Food_Item:
+			
+                Position = OBJECT POSITION of Food_Item in Food_item_Supply_List ARRAY
+                Food_Item_Supply_ListModified = OBJECT at Position in Food_item_Supply_List ARRAY
+				SEPERATE OBJECT of Food_Item_Supply_ListModified ARRAY into OBJECTS
+				
+                IF FoodItemBuy in Food_Item_Supply_ListModified ARRAY :
+                    BREAK FOR LOOP
+		ENDFOR
+	
+        IF Option = "1":
+			PreviousQuantity = SECOND OBJECT of Food_Item_Supply_ListModified ARRAY AFTER CONVERTING TO INTEGER
+            NewQuantity = PreviousQuantity + UserQuantity AFTER CONVERTING TO INTEGER
+			REPLACE FIRST OBJECT OF Food_Item_Supply_ListModified ARRAY with NewQuantity AFTER CONVERTING TO STRING
+            PRINT("------------------------------------")
+            PRINT(FIRST OBJECT OF Food_Item_Supply_ListModified ARRAY, ":-", SECOND OBJECT OF Food_Item_Supply_ListModified ARRAY)
+            PRINT("------------------------------------")
+			JOIN OBJECTS OF Food_Item_Supply_ListModified by ","
+			REPLACE OBJECT at Position in Food_Item_Supply_List ARRAY with Food_Item_Supply_ListModified ARRAY AFTER CONVERTING TO STRING
+            OPEN("Food Item Supply.txt" IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List ARRAY into Food_Item_Supply_List_Txt
+				WRITE 'NEWLINE' into Food_Item_Supply_List_Txt
+			CLOSE("Food Item Supply.txt")
+		ELSE:			
+			PreviousQuantity = OBJECT 2 of Food_Item_Supply_ListModified ARRAY AFTER CONVERSION to INTEGER
+			NewQuantity = PreviousQuantity - (FoodQuantityBuy CONVERED TO INTEGER)
+			
+			IF NewQuantity is LESS THEN 0:
+				PRINT("The current stock of this food item is lesser than the amount you wish to buy, please enter a lower number, 
+					   the current stock of this food item is:-", OBJECT 2 of Food_Item_Supply_ListModified ARRAY)
+				RETURN "No"
+			ELSE:
+				OBJECT 2 Food_Item_Supply_ListModified ARRAY  = NewQuantity AFTER CONVERSION TO STRING
+				PRINT("------------------------------------")
+				PRINT(OBJECT 1 of Food_Item_Supply_ListModified, ":-", OBJECT 2 of Food_Item_Supply_ListModified)
+				PRINT("------------------------------------")
+				JOIN OBJECTS IN Food_Item_Supply_ListModified by ","
+				REPLACE OBJECT at Position in Food_Item_Supply_List with Food_Item_Supply_ListModified AFTER CONVERTING TO STRING
+				PRINT("======================================================================")
+				PRINT("Purchase successful!")
+				PRINT("======================================================================")
+				
+				OPEN("Food Item Supply.txt" IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+					WRITE 'NEWLINE' + Food_Item_Supply_List into Food_Item_Supply_List_Txt
+				CLOSE("Food Item Supply.txt")
+				
+				RETURN "Yes"
+			ENDIF
+		ENDIF
+	CLOSE("Food Item Supply.txt")
+END
+
+
+
+FUNCTION purchasing with parameter(FoodItemBuy, FoodQuantityBuy):
+BEGIN
+	DECLARE  Food_Items_Supply_Modify_Txt, Food_Item_Supply_List_Txt, PreviousQuantity, NewQuantity
+	
+    OPEN("Food Item Supply.txt") as Food_Items_Supply_Modify_Txt:
+	
+		DEFINE ARRAY Food_Item_Supply_List 
+		DEFINE ARRAY Food_Item_Supply_ListModified 
+		
+		READ Food_Items_Supply_Modify_Txt
+		SEPERATE EVERY line OF Food_Items_Supply_Modify_Txt into OBJECTS by ","
+		INSERT OBJECTS into Food_Item_Supply_List ARRAY
+		
+        FOR Food_Item in Food_Item_Supply_List ARRAY:
+		
+            IF FoodItemBuy in Food_Item:
+			
+                Position = OBJECT POSITION of Food_Item in Food_item_Supply_List ARRAY
+                Food_Item_Supply_ListModified = OBJECT at Position in Food_item_Supply_List ARRAY
+				SEPERATE OBJECT of Food_Item_Supply_ListModified ARRAY into OBJECTS
+				
+                IF FoodItemBuy in Food_Item_Supply_ListModified ARRAY :
+                    BREAK FOR LOOP
+		ENDFOR
+		
+		PreviousQuantity = OBJECT 2 of Food_Item_Supply_ListModified ARRAY AFTER CONVERSION to INTEGER
+        NewQuantity = PreviousQuantity - (FoodQuantityBuy CONVERED TO INTEGER)
+		
+        IF NewQuantity is LESS THEN 0:
+            PRINT("The current stock of this food item is lesser than the amount you wish to buy, please enter a lower number, 
+				   the current stock of this food item is:-", OBJECT 2 of Food_Item_Supply_ListModified ARRAY)
+            RETURN "No"
+        ELSE:
+            OBJECT 2 Food_Item_Supply_ListModified ARRAY  = NewQuantity AFTER CONVERSION TO STRING
+            PRINT("------------------------------------")
+            PRINT(OBJECT 1 of Food_Item_Supply_ListModified, ":-", OBJECT 2 of Food_Item_Supply_ListModified)
+            PRINT("------------------------------------")
+			JOIN OBJECTS IN Food_Item_Supply_ListModified by ","
+            REPLACE OBJECT at Position in Food_Item_Supply_List with Food_Item_Supply_ListModified AFTER CONVERTING TO STRING
+            PRINT("======================================================================")
+            PRINT("Purchase successful!")
+            PRINT("======================================================================")
+            OPEN("Food Item Supply.txt" IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List into Food_Item_Supply_List_Txt
+			CLOSE("Food Item Supply.txt")
+            RETURN "Yes"
+		ENDIF
+	CLOSE("Food Item Supply.txt")
+END
+
+
+
+
+
+FUNCTION search_function with parameter(Food_Item_Search):
+
+BEGIN
+	DECLARE Position, Food_Item_Supply_txt
+    OPEN("Food Item Supply.txt") as Food_Item_Supply_txt:
+	
+		DEFINE ARRAY Food_Item_Supply_list_Items 
+		DEFINE ARRAY Food_Item_Supply_list_Quantity
+		DEFINE ARRAY Food_Item_Supply_list
+		DEFINE ARRAY Food_Item
+		READ Food_Item_Supply_txt
+		SEPERATE EVERY line of Food_Item_Supply_txt into OBJECTS by ","
+		INSERT OBJECTS into Food_Item_Supply_list ARRAY
+		
+        FOR x in Food_Item_Supply_list ARRAY:
+		
+            Position = OBJECT POSITION of x in Food_Item_Supply_List ARRAY
+			Food_Item = OBJECT at Position in Food_Item_Supply_list
+			SEPERATE OBJECT in Food_Item into OBJECTS by ","
+            INSERT FIRST OBJECT of Food_Item ARRAY into Food_Item_Supply_list_Items ARRAY
+			INSERT SECOND OBJECT of Food_Item ARRAY into Food_Item_Supply_list_Quantity ARRAY
+			
+		ENDFOR
+		
+        IF Food_Item_Search in Food_Item_Supply_list_Items ARRAY:
+		
+			Position = OBJECT POSITION of Food_Item_Search in Food_Item_Supply_list_Items ARRAY
+            PRINT("======================================================================")
+            PRINT("Item found!")
+            PRINT(OBJECT at Position in Food_Item_Supply_list_Items ARRAY, ":-", OBJECT at Position in Food_Item_Supply_list_Quantity ARRAY)
+            PRINT("======================================================================")
+            RETURN Food_Item_Search
+			
+        ELSE:
+		
+            PRINT("---------------------------------------------------------------------")
+            PRINT("Item not found!")
+            PRINT("---------------------------------------------------------------------")
+            RETURN "No"
+		ENDIF
+	CLOSE("Food Item Supply.txt")
+END
+
+
+
+FUNCTION grains with parameter(grain_item, Quantity)
+BEGIN
+	DECLARE  FoodItems_txtGrains, FoodItemsSupply_txtGrains
+	
+	OPEN ("Food Items.txt" in READ MODE) as FoodItems_txtGrains:
+	
+		DEFINE ARRAY Food_List_Grains 
+		DEFINE ARRAY Food_List_Grains1 
+		
+		READ FoodItems_txtGrains
+		SEPERATE EVERY line OF FoodItems_txtGrains into OBJECTS
+		INSERT into Food_List_Grains ARRAY
+		INSERT OBJECT 1 of Food_List_Grains ARRAY into Food_List_Grains1 ARRAY
+		SEPERATE OBJECT of Food_List_Grains1 ARRAY into OBJECTS
+		APPEND grain_item parameter to Food_List_Grains1 ARRAY
+		JOIN OBJECTS in Food_List_Grains1 ARRAY by ","
+		REPLACE OBJECT 1 of Food_List_Grains ARRAY with Food_List_Grains1 ARRAY
+		
+		PRINT("")
+        PRINT("======================================================================")
+        PRINT(OBJECT 1 of Food_List_Grains ARRAY)
+        PRINT("======================================================================")
+        PRINT("")
+		
+	CLOSE ("FoodItems_txtGrains")
+	
+	OPEN ("Food Item.txt" in WRITE+ MODE) as FoodItems_txtGrains:
+		WRITE  'NEWLINE' + Food_List_Grains into FoodItems_txtGrains
+		WRITE  'NEWLINE' into FoodItems_txtGrains
+	CLOSE ("Food Item.txt")
+	
+	OPEN ("Food Item Supply.txt" in APPEND MODE) as FoodItemsSupply_txtGrains:
+		WRITE 'NEWLINE' + grain_item + "," + Quantity into FoodItemsSupply_txtGrains
+	CLOSE ("Food Item Supply.txt")
+END
+
+
+
+FUNCTION modify_grains_rename_remove with parameter(FoodItemModify, Option, NewFoodName):
+BEGIN
+	DECLARE Food_Items_Modifytxt, Position, FoodItems_txtGrains, Food_Item_Supply_Txt, Food_Item_Supply_List_Txt
+	
+    OPEN("Food Items.txt") as Food_Items_Modifytxt:
+	
+		DEFINE ARRAY Food_Items_List 
+		DEFINE ARRAY Food_Items_Grain_Modified 
+		
+		READ Food_Items_Modifytxt
+		SEPERATE EVERY line Food_Items_Modifytxt into OBJECTS
+		INSERT into Food_Items_List ARRAY
+		Food_Items_Grain_Modified ARRAY = OBJECT 1 of Food_Items_List ARRAY
+		SEPERATE OBJECT of Food_Items_Grain_Modified ARRAY into OBJECTS by ","
+
+        IF Option = "1":
+		
+			Position = OBJECT POSITION of FoodItemModify IN Food_Items_Grain_Modified ARRAY
+            REPLACE OBJECT at Position in Food_Items_Grain_Modified ARRAY with NewFoodName
+            JOIN OBJECTS in Food_Items_Grain_Modified ARRAY by ","
+			REPLACE OBJECT 1 of Food_Items_List ARRAY with Food_Items_Grain_Modified ARRAY            
+            PRINT("======================================================================")
+            PRINT(OBJECT 1 of Food_Items_List ARRAY
+            PRINT("======================================================================")
+			
+            OPEN("Food Items.txt" in WRITE+ MODE) as FoodItems_txtGrains:
+				WRITE 'NEWLINE' + Food_Items_List ARRAY into FoodItems_txtGrains
+                WRITE 'NEWLINE' into FoodItems_txtGrains
+			CLOSE("Food Items.txt")
+			
+        ELSE:
+		
+            REMOVE FoodItemModify FROM Food_Items_Grain_Modified ARRAY
+			JOIN OBJECTS in Food_Items_Grain_Modified ARRAY by ","
+            REPLACE OBJECT 1 of Food_Items_List with Food_Items_Grain_Modified
+           
+            OPEN("Food Items.txt" in WRITE MODE) as FoodItems_txtGrains:
+				WRITE 'NEWLINE' + Food_Items_List into FoodItems_txtGrains
+				WRITE 'NEWLINE' into FoodItems_txtGrains
+			CLOSE("Food Items.txt")
+		ENDIF
+			
+    OPEN("Food Item Supply.txt") as Food_Item_Supply_Txt:
+	
+		DEFINE ARRAY Food_Item_Supply_List
+		DEFINE ARRAY Food_Item_Supply_ListModified
+		
+		READ Food_Item_Supply_Txt
+		SEPERATE EVERY line of Food_Item_Supply_Txt into OBJECTS
+		INSERT into Food_Item_Supply_List ARRAY
+       
+        FOR Food_Item in Food_Item_Supply_List ARRAY:
+		
+            IF FoodItemModify in Food_Item:			
+				Position = OBJECT POSITION of Food_Item IN Food_Item_Supply_List ARRAY
+                Food_Item_Supply_ListModified = Object(Position) of Food_Item_Supply_List ARRAY
+                SEPERATE OBJECT of Food_Item_Supply_ListModified ARRAY into OBJECTS by ","
+				
+                IF FoodItemModify in Food_Item_Supply_ListModified ARRAY:
+                    BREAK FOR LOOP
+		ENDFOR
+					
+        IF Option = "1":
+		
+			REPLACE OBJECT 0 of Food_Item_Supply_ListModified ARRAY with NewFoodName
+            PRINT("------------------------------------")
+            PRINT(OBJECT 1 Food_Item_Supply_ListModified ARRAY, ":-", OBJECT 2 Food_Item_Supply_ListModified ARRAY)
+            PRINT("------------------------------------")
+			JOIN OBJECTS IN Food_Item_Supply_ListModified ARRAY by ","
+			CONVERT Food_Item_Supply_ListModified ARRAY into STRING
+			REPLACE Food_Item_Supply_List ARRAY with Food_Item_Supply_ListModified ARRAY
+            
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List ARRAY into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+			
+        ELSE:
+		
+            REMOVE OBJECT(Position) IN Food_Item_Supply_List
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+		ENDIF
+END
+
+
+
+
+
+
+FUNCTION raw_meats with parameter(rawmeat_item, Quantity):
+BEGIN
+
+	DECLARE FoodItems_txtRawMeats, FoodItemsSupply_txtRawMeats
+	
+	OPEN ("Food Items.txt" in READ MODE) as FoodItems_txtRawMeats:
+	
+		DEFINE ARRAY Food_List_RawMeats
+		DEFINE ARRAY Food_List_RawMeats1
+		
+		READ FoodItems_txtRawMeats
+		SEPERATE EVERY line OF FoodItems_txtRawMeats into OBJECTS
+		INSERT into Food_List_RawMeats ARRAY
+		INSERT OBJECT 2 of Food_List_RawMeats ARRAY into Food_List_RawMeats1 ARRAY
+		SEPERATE OBJECT of Food_List_RawMeats1 ARRAY into OBJECTS
+		APPEND raw_meats parameter to Food_List_RawMeats1 ARRAY
+		JOIN OBJECTS in Food_List_RawMeats1 ARRAY by ","
+		REPLACE OBJECT 2 of Food_List_RawMeats ARRAY with Food_List_RawMeats1 ARRAY
+		
+		PRINT("")
+        PRINT("======================================================================")
+        PRINT(OBJECT 2 of Food_List_RawMeats ARRAY)
+        PRINT("======================================================================")
+        PRINT("")
+		
+	CLOSE ("FoodItems_txtRawMeats")
+	
+	OPEN ("Food Item.txt" in WRITE+ MODE) as FoodItems_txtRawMeats:
+		WRITE  'NEWLINE' + Food_List_RawMeats into FoodItems_txtRawMeats
+		WRITE  'NEWLINE' into FoodItems_txtRawMeats
+	CLOSE ("Food Item.txt")
+	
+	OPEN ("Food Item Supply.txt" in APPEND MODE) as FoodItemsSupply_txtRawMeats:
+		WRITE 'NEWLINE' + raw_meats + "," + Quantity into FoodItemsSupply_txtRawMeats
+	CLOSE ("Food Item Supply.txt")	
+END
+
+FUNCTION modify_rawmeats_rename_remove with parameter(FoodItemModify, Option, NewFoodName):
+BEGIN
+	DECLARE Food_Items_Modifytxt, Position, FoodItems_txtRawMeats, Food_Item_Supply_Txt, Food_Item_Supply_List_Txt
+	
+    OPEN("Food Items.txt") as Food_Items_Modifytxt:
+	
+		DEFINE ARRAY Food_Items_List 
+		DEFINE ARRAY Food_Items_RawMeats_Modified  
+		
+		READ Food_Items_Modifytxt
+		SEPERATE EVERY line Food_Items_Modifytxt into OBJECTS
+		INSERT into Food_Items_List ARRAY
+		Food_Items_RawMeats_Modified  ARRAY = OBJECT 2 of Food_Items_List ARRAY
+		SEPERATE OBJECT of Food_Items_RawMeats_Modified  ARRAY into OBJECTS by ","
+
+        IF Option = "1":
+		
+			Position = OBJECT POSITION of FoodItemModify IN Food_Items_RawMeats_Modified  ARRAY
+            REPLACE OBJECT at Position in Food_Items_RawMeats_Modified  ARRAY with NewFoodName
+            JOIN OBJECTS in Food_Items_RawMeats_Modified  ARRAY by ","
+			REPLACE OBJECT 2 of Food_Items_List ARRAY with Food_Items_RawMeats_Modified  ARRAY            
+            PRINT("======================================================================")
+            PRINT(OBJECT 2 of Food_Items_List ARRAY
+            PRINT("======================================================================")
+			
+            OPEN("Food Items.txt" in WRITE+ MODE) as FoodItems_txtRawMeats:
+				WRITE 'NEWLINE' + Food_Items_List ARRAY into FoodItems_txtRawMeats
+                WRITE 'NEWLINE' into FoodItems_txtRawMeats
+			CLOSE("Food Items.txt")
+			
+        ELSE:
+		
+            REMOVE FoodItemModify FROM Food_Items_RawMeats_Modified  ARRAY
+			JOIN OBJECTS in Food_Items_RawMeats_Modified  ARRAY by ","
+            REPLACE OBJECT 2 of Food_Items_List with Food_Items_RawMeats_Modified 
+           
+            OPEN("Food Items.txt" in WRITE MODE) as FoodItems_txtRawMeats:
+				WRITE 'NEWLINE' + Food_Items_List into FoodItems_txtRawMeats
+				WRITE 'NEWLINE' into FoodItems_txtRawMeats
+			CLOSE("Food Items.txt")
+		ENDIF
+			
+    OPEN("Food Item Supply.txt") as Food_Item_Supply_Txt:
+	
+		DEFINE ARRAY Food_Item_Supply_List
+		DEFINE ARRAY Food_Item_Supply_ListModified
+		
+		READ Food_Item_Supply_Txt
+		SEPERATE EVERY line of Food_Item_Supply_Txt into OBJECTS
+		INSERT into Food_Item_Supply_List ARRAY
+       
+        FOR Food_Item in Food_Item_Supply_List ARRAY:
+		
+            IF FoodItemModify in Food_Item:			
+				Position = OBJECT POSITION of Food_Item IN Food_Item_Supply_List ARRAY
+                Food_Item_Supply_ListModified = Object(Position) of Food_Item_Supply_List ARRAY
+                SEPERATE OBJECT of Food_Item_Supply_ListModified ARRAY into OBJECTS by ","
+				
+                IF FoodItemModify in Food_Item_Supply_ListModified ARRAY:
+                    BREAK FOR LOOP
+		ENDFOR
+					
+        IF Option = "1":
+		
+			REPLACE OBJECT 0 of Food_Item_Supply_ListModified ARRAY with NewFoodName
+            PRINT("------------------------------------")
+            PRINT(OBJECT 1 Food_Item_Supply_ListModified ARRAY, ":-", OBJECT 2 Food_Item_Supply_ListModified ARRAY)
+            PRINT("------------------------------------")
+			JOIN OBJECTS IN Food_Item_Supply_ListModified ARRAY by ","
+			CONVERT Food_Item_Supply_ListModified ARRAY into STRING
+			REPLACE Food_Item_Supply_List ARRAY with Food_Item_Supply_ListModified ARRAY
+            
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List ARRAY into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+			
+        ELSE:
+		
+            REMOVE OBJECT(Position) IN Food_Item_Supply_List
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+		ENDIF
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FUNCTION dairy with parameter(dairy_item, Quantity):
+BEGIN
+	DECLARE  FoodItems_txtDairy, FoodItemsSupply_txtDairy
+	
+	OPEN ("Food Items.txt" in READ MODE) as FoodItems_txtDairy:
+	
+		DEFINE ARRAY Food_List_Dairy 
+		DEFINE ARRAY Food_List_Dairy1 
+		
+		READ FoodItems_txtDairy
+		SEPERATE EVERY line OF FoodItems_txtDairy into OBJECTS
+		INSERT into Food_List_Dairy ARRAY
+		INSERT OBJECT 3 of Food_List_Dairy ARRAY into Food_List_Dairy1 ARRAY
+		SEPERATE OBJECT of Food_List_Dairy1 ARRAY into OBJECTS
+		APPEND dairy_item parameter to Food_List_Dairy1 ARRAY
+		JOIN OBJECTS in Food_List_Dairy1 ARRAY by ","
+		REPLACE OBJECT 3 of Food_List_Dairy ARRAY with Food_List_Dairy1 ARRAY
+		
+		PRINT("")
+        PRINT("======================================================================")
+        PRINT(OBJECT 3 of Food_List_Dairy ARRAY)
+        PRINT("======================================================================")
+        PRINT("")
+		
+	CLOSE ("FoodItems_txtDairy")
+	
+	OPEN ("Food Item.txt" in WRITE+ MODE) as FoodItems_txtDairy:
+		WRITE  'NEWLINE' + Food_List_Dairy into FoodItems_txtDairy
+		WRITE  'NEWLINE' into FoodItems_txtDairy
+	CLOSE ("Food Item.txt")
+	
+	OPEN ("Food Item Supply.txt" in APPEND MODE) as FoodItemsSupply_txtDairy:
+		WRITE 'NEWLINE' + dairy_item + "," + Quantity into FoodItemsSupply_txtDairy
+	CLOSE ("Food Item Supply.txt")
+END
+
+
+FUNCTION modify_dairy_rename_remove with parameter(FoodItemModify, Option, NewFoodName):
+BEGIN
+	DECLARE Food_Items_Modifytxt, Position, FoodItems_txtDairy, Food_Item_Supply_Txt, Food_Item_Supply_List_Txt
+	
+    OPEN("Food Items.txt") as Food_Items_Modifytxt:
+	
+		DEFINE ARRAY Food_Items_List 
+		DEFINE ARRAY Food_Items_Dairy_Modified  
+		
+		READ Food_Items_Modifytxt
+		SEPERATE EVERY line Food_Items_Modifytxt into OBJECTS
+		INSERT into Food_Items_List ARRAY
+		Food_Items_Dairy_Modified  ARRAY = OBJECT 3 of Food_Items_List ARRAY
+		SEPERATE OBJECT of Food_Items_Dairy_Modified  ARRAY into OBJECTS by ","
+
+        IF Option = "1":
+		
+			Position = OBJECT POSITION of FoodItemModify IN Food_Items_Dairy_Modified  ARRAY
+            REPLACE OBJECT at Position in Food_Items_Dairy_Modified  ARRAY with NewFoodName
+            JOIN OBJECTS in Food_Items_Dairy_Modified  ARRAY by ","
+			REPLACE OBJECT 3 of Food_Items_List ARRAY with Food_Items_Dairy_Modified  ARRAY            
+            PRINT("======================================================================")
+            PRINT(OBJECT 3 of Food_Items_List ARRAY
+            PRINT("======================================================================")
+			
+            OPEN("Food Items.txt" in WRITE+ MODE) as FoodItems_txtDairy:
+				WRITE 'NEWLINE' + Food_Items_List ARRAY into FoodItems_txtDairy
+                WRITE 'NEWLINE' into FoodItems_txtDairy
+			CLOSE("Food Items.txt")
+			
+        ELSE:
+		
+            REMOVE FoodItemModify FROM Food_Items_Dairy_Modified  ARRAY
+			JOIN OBJECTS in Food_Items_Dairy_Modified  ARRAY by ","
+            REPLACE OBJECT 3 of Food_Items_List with Food_Items_Dairy_Modified 
+           
+            OPEN("Food Items.txt" in WRITE MODE) as FoodItems_txtDairy:
+				WRITE 'NEWLINE' + Food_Items_List into FoodItems_txtDairy
+				WRITE 'NEWLINE' into FoodItems_txtDairy
+			CLOSE("Food Items.txt")
+		ENDIF
+			
+    OPEN("Food Item Supply.txt") as Food_Item_Supply_Txt:
+	
+		DEFINE ARRAY Food_Item_Supply_List
+		DEFINE ARRAY Food_Item_Supply_ListModified
+		
+		READ Food_Item_Supply_Txt
+		SEPERATE EVERY line of Food_Item_Supply_Txt into OBJECTS
+		INSERT into Food_Item_Supply_List ARRAY
+       
+        FOR Food_Item in Food_Item_Supply_List ARRAY:
+		
+            IF FoodItemModify in Food_Item:			
+				Position = OBJECT POSITION of Food_Item IN Food_Item_Supply_List ARRAY
+                Food_Item_Supply_ListModified = Object(Position) of Food_Item_Supply_List ARRAY
+                SEPERATE OBJECT of Food_Item_Supply_ListModified ARRAY into OBJECTS by ","
+				
+                IF FoodItemModify in Food_Item_Supply_ListModified ARRAY:
+                    BREAK FOR LOOP
+		ENDFOR
+					
+        IF Option = "1":
+		
+			REPLACE OBJECT 0 of Food_Item_Supply_ListModified ARRAY with NewFoodName
+            PRINT("------------------------------------")
+            PRINT(OBJECT 1 Food_Item_Supply_ListModified ARRAY, ":-", OBJECT 2 Food_Item_Supply_ListModified ARRAY)
+            PRINT("------------------------------------")
+			JOIN OBJECTS IN Food_Item_Supply_ListModified ARRAY by ","
+			CONVERT Food_Item_Supply_ListModified ARRAY into STRING
+			REPLACE Food_Item_Supply_List ARRAY with Food_Item_Supply_ListModified ARRAY
+            
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List ARRAY into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+			
+        ELSE:
+		
+            REMOVE OBJECT(Position) IN Food_Item_Supply_List
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+		ENDIF
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FUNCTION vegetables with parameter(vegetable_item, Quantity):
+BEGIN
+	DECLARE  FoodItems_txtVegetables, FoodItemsSupply_txtVegetables
+	
+	OPEN ("Food Items.txt" in READ MODE) as FoodItems_txtVegetables:
+	
+		DEFINE ARRAY Food_List_Vegetables 
+		DEFINE ARRAY Food_List_Vegetables1 
+		
+		READ FoodItems_txtVegetables
+		SEPERATE EVERY line OF FoodItems_txtVegetables into OBJECTS
+		INSERT into Food_List_Vegetables ARRAY
+		INSERT OBJECT 4 of Food_List_Vegetables ARRAY into Food_List_Vegetables1 ARRAY
+		SEPERATE OBJECT of Food_List_Vegetables1 ARRAY into OBJECTS
+		APPEND vegetable_item parameter to Food_List_Vegetables1 ARRAY
+		JOIN OBJECTS in Food_List_Vegetables1 ARRAY by ","
+		REPLACE OBJECT 4 of Food_List_Vegetables ARRAY with Food_List_Vegetables1 ARRAY
+		
+		PRINT("")
+        PRINT("======================================================================")
+        PRINT(OBJECT 4 of Food_List_Vegetables ARRAY)
+        PRINT("======================================================================")
+        PRINT("")
+		
+	CLOSE ("FoodItems_txtVegetables")
+	
+	OPEN ("Food Item.txt" in WRITE+ MODE) as FoodItems_txtVegetables:
+		WRITE  'NEWLINE' + Food_List_Vegetables into FoodItems_txtVegetables
+		WRITE  'NEWLINE' into FoodItems_txtVegetables
+	CLOSE ("Food Item.txt")
+	
+	OPEN ("Food Item Supply.txt" in APPEND MODE) as FoodItemsSupply_txtVegetables:
+		WRITE 'NEWLINE' + vegetable_item + "," + Quantity into FoodItemsSupply_txtVegetables
+	CLOSE ("Food Item Supply.txt")
+END
+
+FUNCTION modify_vegetables_rename_remove with parameter(FoodItemModify, Option, NewFoodName):
+BEGIN
+	DECLARE Food_Items_Modifytxt, Position, FoodItems_txtVegetables, Food_Item_Supply_Txt, Food_Item_Supply_List_Txt
+	
+    OPEN("Food Items.txt") as Food_Items_Modifytxt:
+	
+		DEFINE ARRAY Food_Items_List 
+		DEFINE ARRAY Food_Items_Vegetables_Modified  
+		
+		READ Food_Items_Modifytxt
+		SEPERATE EVERY line Food_Items_Modifytxt into OBJECTS
+		INSERT into Food_Items_List ARRAY
+		Food_Items_Vegetables_Modified  ARRAY = OBJECT 4 of Food_Items_List ARRAY
+		SEPERATE OBJECT of Food_Items_Vegetables_Modified  ARRAY into OBJECTS by ","
+
+        IF Option = "1":
+		
+			Position = OBJECT POSITION of FoodItemModify IN Food_Items_Vegetables_Modified  ARRAY
+            REPLACE OBJECT at Position in Food_Items_Vegetables_Modified  ARRAY with NewFoodName
+            JOIN OBJECTS in Food_Items_Vegetables_Modified  ARRAY by ","
+			REPLACE OBJECT 4 of Food_Items_List ARRAY with Food_Items_Vegetables_Modified  ARRAY            
+            PRINT("======================================================================")
+            PRINT(OBJECT 4 of Food_Items_List ARRAY
+            PRINT("======================================================================")
+			
+            OPEN("Food Items.txt" in WRITE+ MODE) as FoodItems_txtVegetables:
+				WRITE 'NEWLINE' + Food_Items_List ARRAY into FoodItems_txtVegetables
+                WRITE 'NEWLINE' into FoodItems_txtVegetables
+			CLOSE("Food Items.txt")
+			
+        ELSE:
+		
+            REMOVE FoodItemModify FROM Food_Items_Vegetables_Modified  ARRAY
+			JOIN OBJECTS in Food_Items_Vegetables_Modified  ARRAY by ","
+            REPLACE OBJECT 4 of Food_Items_List with Food_Items_Vegetables_Modified 
+           
+            OPEN("Food Items.txt" in WRITE MODE) as FoodItems_txtVegetables:
+				WRITE 'NEWLINE' + Food_Items_List into FoodItems_txtVegetables
+				WRITE 'NEWLINE' into FoodItems_txtVegetables
+			CLOSE("Food Items.txt")
+		ENDIF
+			
+    OPEN("Food Item Supply.txt") as Food_Item_Supply_Txt:
+	
+		DEFINE ARRAY Food_Item_Supply_List
+		DEFINE ARRAY Food_Item_Supply_ListModified
+		
+		READ Food_Item_Supply_Txt
+		SEPERATE EVERY line of Food_Item_Supply_Txt into OBJECTS
+		INSERT into Food_Item_Supply_List ARRAY
+       
+        FOR Food_Item in Food_Item_Supply_List ARRAY:
+		
+            IF FoodItemModify in Food_Item:			
+				Position = OBJECT POSITION of Food_Item IN Food_Item_Supply_List ARRAY
+                Food_Item_Supply_ListModified = Object(Position) of Food_Item_Supply_List ARRAY
+                SEPERATE OBJECT of Food_Item_Supply_ListModified ARRAY into OBJECTS by ","
+				
+                IF FoodItemModify in Food_Item_Supply_ListModified ARRAY:
+                    BREAK FOR LOOP
+		ENDFOR
+					
+        IF Option = "1":
+		
+			REPLACE OBJECT 0 of Food_Item_Supply_ListModified ARRAY with NewFoodName
+            PRINT("------------------------------------")
+            PRINT(OBJECT 1 Food_Item_Supply_ListModified ARRAY, ":-", OBJECT 2 Food_Item_Supply_ListModified ARRAY)
+            PRINT("------------------------------------")
+			JOIN OBJECTS IN Food_Item_Supply_ListModified ARRAY by ","
+			CONVERT Food_Item_Supply_ListModified ARRAY into STRING
+			REPLACE Food_Item_Supply_List ARRAY with Food_Item_Supply_ListModified ARRAY
+            
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List ARRAY into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+			
+        ELSE:
+		
+            REMOVE OBJECT(Position) IN Food_Item_Supply_List
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+		ENDIF
+END
+
+
+
+
+
+
+
+
+
+
+
+
+FUNCTION fruits with parameter(fruit_item, Quantity):
+BEGIN
+	DECLARE  FoodItems_txtFruits, FoodItemsSupply_txtFruits
+	
+	OPEN ("Food Items.txt" in READ MODE) as FoodItems_txtFruits:
+	
+		DEFINE ARRAY Food_List_Fruits 
+		DEFINE ARRAY Food_List_Fruits1 
+		
+		READ FoodItems_txtFruits
+		SEPERATE EVERY line OF FoodItems_txtFruits into OBJECTS
+		INSERT into Food_List_Fruits ARRAY
+		INSERT OBJECT 5 of Food_List_Fruits ARRAY into Food_List_Fruits1 ARRAY
+		SEPERATE OBJECT of Food_List_Fruits1 ARRAY into OBJECTS
+		APPEND fruit_item parameter to Food_List_Fruits1 ARRAY
+		JOIN OBJECTS in Food_List_Fruits1 ARRAY by ","
+		REPLACE OBJECT 5 of Food_List_Fruits ARRAY with Food_List_Fruits1 ARRAY
+		
+		PRINT("")
+        PRINT("======================================================================")
+        PRINT(OBJECT 5 of Food_List_Fruits ARRAY)
+        PRINT("======================================================================")
+        PRINT("")
+		
+	CLOSE ("FoodItems_txtFruits")
+	
+	OPEN ("Food Item.txt" in WRITE+ MODE) as FoodItems_txtFruits:
+		WRITE  'NEWLINE' + Food_List_Fruits into FoodItems_txtFruits
+		WRITE  'NEWLINE' into FoodItems_txtFruits
+	CLOSE ("Food Item.txt")
+	
+	OPEN ("Food Item Supply.txt" in APPEND MODE) as FoodItemsSupply_txtFruits:
+		WRITE 'NEWLINE' + fruit_item + "," + Quantity into FoodItemsSupply_txtFruits
+	CLOSE ("Food Item Supply.txt")
+END
+
+FUNCTION modify_fruits_rename_remove with parameter(FoodItemModify, Option, NewFoodName):
+BEGIN
+	DECLARE Food_Items_Modifytxt, Position, FoodItems_txtFruits, Food_Item_Supply_Txt, Food_Item_Supply_List_Txt
+	
+    OPEN("Food Items.txt") as Food_Items_Modifytxt:
+	
+		DEFINE ARRAY Food_Items_List 
+		DEFINE ARRAY Food_Items_Fruits_Modified  
+		
+		READ Food_Items_Modifytxt
+		SEPERATE EVERY line Food_Items_Modifytxt into OBJECTS
+		INSERT into Food_Items_List ARRAY
+		Food_Items_Fruits_Modified  ARRAY = OBJECT 5 of Food_Items_List ARRAY
+		SEPERATE OBJECT of Food_Items_Fruits_Modified  ARRAY into OBJECTS by ","
+
+        IF Option = "1":
+		
+			Position = OBJECT POSITION of FoodItemModify IN Food_Items_Fruits_Modified  ARRAY
+            REPLACE OBJECT at Position in Food_Items_Fruits_Modified  ARRAY with NewFoodName
+            JOIN OBJECTS in Food_Items_Fruits_Modified  ARRAY by ","
+			REPLACE OBJECT 5 of Food_Items_List ARRAY with Food_Items_Fruits_Modified  ARRAY            
+            PRINT("======================================================================")
+            PRINT(OBJECT 5 of Food_Items_List ARRAY
+            PRINT("======================================================================")
+			
+            OPEN("Food Items.txt" in WRITE+ MODE) as FoodItems_txtFruits:
+				WRITE 'NEWLINE' + Food_Items_List ARRAY into FoodItems_txtFruits
+                WRITE 'NEWLINE' into FoodItems_txtFruits
+			CLOSE("Food Items.txt")
+			
+        ELSE:
+		
+            REMOVE FoodItemModify FROM Food_Items_Fruits_Modified  ARRAY
+			JOIN OBJECTS in Food_Items_Fruits_Modified  ARRAY by ","
+            REPLACE OBJECT 5 of Food_Items_List with Food_Items_Fruits_Modified 
+           
+            OPEN("Food Items.txt" in WRITE MODE) as FoodItems_txtFruits:
+				WRITE 'NEWLINE' + Food_Items_List into FoodItems_txtFruits
+				WRITE 'NEWLINE' into FoodItems_txtFruits
+			CLOSE("Food Items.txt")
+		ENDIF
+			
+    OPEN("Food Item Supply.txt") as Food_Item_Supply_Txt:
+	
+		DEFINE ARRAY Food_Item_Supply_List
+		DEFINE ARRAY Food_Item_Supply_ListModified
+		
+		READ Food_Item_Supply_Txt
+		SEPERATE EVERY line of Food_Item_Supply_Txt into OBJECTS
+		INSERT into Food_Item_Supply_List ARRAY
+       
+        FOR Food_Item in Food_Item_Supply_List ARRAY:
+		
+            IF FoodItemModify in Food_Item:			
+				Position = OBJECT POSITION of Food_Item IN Food_Item_Supply_List ARRAY
+                Food_Item_Supply_ListModified = Object(Position) of Food_Item_Supply_List ARRAY
+                SEPERATE OBJECT of Food_Item_Supply_ListModified ARRAY into OBJECTS by ","
+				
+                IF FoodItemModify in Food_Item_Supply_ListModified ARRAY:
+                    BREAK FOR LOOP
+		ENDFOR
+					
+        IF Option = "1":
+		
+			REPLACE OBJECT 0 of Food_Item_Supply_ListModified ARRAY with NewFoodName
+            PRINT("------------------------------------")
+            PRINT(OBJECT 1 Food_Item_Supply_ListModified ARRAY, ":-", OBJECT 2 Food_Item_Supply_ListModified ARRAY)
+            PRINT("------------------------------------")
+			JOIN OBJECTS IN Food_Item_Supply_ListModified ARRAY by ","
+			CONVERT Food_Item_Supply_ListModified ARRAY into STRING
+			REPLACE Food_Item_Supply_List ARRAY with Food_Item_Supply_ListModified ARRAY
+            
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List ARRAY into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+			
+        ELSE:
+		
+            REMOVE OBJECT(Position) IN Food_Item_Supply_List
+            OPEN("Food Item Supply.txt", IN WRITE+ MODE) as Food_Item_Supply_List_Txt:
+				WRITE 'NEWLINE' + Food_Item_Supply_List into Food_Item_Supply_List_Txt
+            CLOSE("Food Item Supply.txt")
+		ENDIF
+END
+
+
+
+
+
+
+
+		
